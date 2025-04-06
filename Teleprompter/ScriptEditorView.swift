@@ -10,7 +10,7 @@ struct ScriptEditorView: View {
     @State private var editedContent: String
     @State private var showingSettings = false
     @State private var isPlaying = false
-    @State private var scrollPosition: CGFloat = 0
+    @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var scrollTimer: Timer?
     @State private var showingFloatingWindow = false
     
@@ -38,14 +38,23 @@ struct ScriptEditorView: View {
                     ScrollView {
                         Text(script.content ?? "")
                             .font(.system(size: CGFloat(script.fontSize)))
+                            .fontWeight(.bold)
                             .padding()
-                            .offset(y: scrollPosition)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .scrollPosition(
+                        $scrollPosition
+                    )
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                if !isPlaying {
-                                    scrollPosition += value.translation.height
+                                if isPlaying {
+                                    stopScrolling()
+                                }
+                            }
+                            .onEnded { _ in
+                                if isPlaying {
+                                    startScrolling()
                                 }
                             }
                     )
@@ -111,13 +120,13 @@ struct ScriptEditorView: View {
     
     private func resetScroll() {
         withAnimation {
-            scrollPosition = 0
+            scrollPosition.scrollTo(edge: .top)
         }
     }
     
     private func scrollBackward() {
         withAnimation {
-            scrollPosition += 100
+            scrollPosition.scrollTo(x: 0, y: max(0, (scrollPosition.point?.y ?? 0) - 50))
         }
     }
     
@@ -131,17 +140,13 @@ struct ScriptEditorView: View {
     }
     
     private func startScrolling() {
-        scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.1)) {
-                scrollPosition -= CGFloat(script.scrollSpeed)
-                
-                // Check if we've scrolled past the content height
-                let contentHeight = (script.content ?? "").height(withConstrainedWidth: UIScreen.main.bounds.width - 40, font: .systemFont(ofSize: CGFloat(script.fontSize)))
-                if scrollPosition < -contentHeight {
-                    scrollPosition = 0
+        let interval = 0.25 / CGFloat(script.scrollSpeed)
+        scrollTimer = Timer
+            .scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+                withAnimation(.linear(duration: 0.1)) {
+                    scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 1)
                 }
             }
-        }
     }
     
     private func stopScrolling() {
@@ -151,7 +156,7 @@ struct ScriptEditorView: View {
     
     private func scrollForward() {
         withAnimation {
-            scrollPosition -= 100
+            scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 50)
         }
     }
 }
@@ -173,7 +178,7 @@ struct SettingsView: View {
                     
                     HStack {
                         Text("Scroll Speed")
-                        Slider(value: $script.scrollSpeed, in: 10...100, step: 1)
+                        Slider(value: $script.scrollSpeed, in: 1...100, step: 1)
                         Text(String(format: "%.1f", script.scrollSpeed))
                     }
                 }

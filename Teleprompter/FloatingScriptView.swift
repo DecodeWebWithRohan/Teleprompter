@@ -4,7 +4,7 @@ struct FloatingScriptView: View {
     @ObservedObject var script: Script
     @Binding var isVisible: Bool
     @State private var isPlaying = false
-    @State private var scrollPosition: CGFloat = 0
+    @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var scrollTimer: Timer?
     @State private var position: CGPoint = CGPoint(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2)
     @State private var size: CGSize = CGSize(width: 300, height: 200)
@@ -37,21 +37,21 @@ struct FloatingScriptView: View {
                 ScrollView {
                     Text(script.content ?? "")
                         .font(.system(size: CGFloat(script.fontSize)))
+                        .fontWeight(.bold)
                         .padding()
-                        .offset(y: scrollPosition)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .scrollPosition(
+                    $scrollPosition
+                )
                 .gesture(
                     DragGesture()
                         .onChanged { value in
-                            // Stop auto-scrolling when user touches
                             if isPlaying {
                                 stopScrolling()
                             }
-                            // Update scroll position based on drag
-                            scrollPosition += value.translation.height
                         }
                         .onEnded { _ in
-                            // Restart auto-scrolling if it was active before
                             if isPlaying {
                                 startScrolling()
                             }
@@ -120,13 +120,13 @@ struct FloatingScriptView: View {
     
     private func resetScroll() {
         withAnimation {
-            scrollPosition = 0
+            scrollPosition.scrollTo(edge: .top)
         }
     }
     
     private func scrollBackward() {
         withAnimation {
-            scrollPosition += 100
+            scrollPosition.scrollTo(x: 0, y: max(0, (scrollPosition.point?.y ?? 0) - 50))
         }
     }
     
@@ -140,18 +140,13 @@ struct FloatingScriptView: View {
     }
     
     private func startScrolling() {
+        let interval = 0.25 / CGFloat(script.scrollSpeed)
         scrollTimer = Timer
-            .scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.1)) {
-                scrollPosition -= CGFloat(script.scrollSpeed)
-                
-                // Check if we've scrolled past the content height
-                let contentHeight = (script.content ?? "").height(withConstrainedWidth: size.width - 40, font: .systemFont(ofSize: CGFloat(script.fontSize)))
-                if scrollPosition < -contentHeight {
-                    scrollPosition = 0
+            .scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+                withAnimation(.linear(duration: 0.1)) {
+                    scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 1)
                 }
             }
-        }
     }
     
     private func stopScrolling() {
@@ -161,7 +156,7 @@ struct FloatingScriptView: View {
     
     private func scrollForward() {
         withAnimation {
-            scrollPosition -= 100
+            scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 50)
         }
     }
-} 
+}
