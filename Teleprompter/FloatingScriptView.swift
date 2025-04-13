@@ -1,16 +1,20 @@
+import SwiftData
 import SwiftUI
 
 struct FloatingScriptView: View {
-    @ObservedObject var script: Script
+    @Bindable var script: Script
     @Binding var isVisible: Bool
     @State private var isPlaying = false
     @State private var scrollPosition = ScrollPosition(edge: .top)
     @State private var scrollTimer: Timer?
-    @State private var position: CGPoint = CGPoint(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2)
+    @State private var position: CGPoint = CGPoint(
+        x: UIScreen.main.bounds.width / 2,
+        y: UIScreen.main.bounds.height / 2
+    )
     @State private var size: CGSize = CGSize(width: 300, height: 200)
     @State private var isLocked = false
     @State private var lastDragPosition: CGPoint?
-    
+
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
@@ -18,13 +22,16 @@ struct FloatingScriptView: View {
                     Text(script.title ?? "")
                         .font(.headline)
                         .lineLimit(1)
-                    
+
                     Spacer()
-                    
+
                     Button(action: { isLocked.toggle() }) {
-                        Image(systemName: isLocked ? "lock.fill" : "lock.open.fill")
+                        Image(
+                            systemName: isLocked
+                                ? "lock.fill" : "lock.open.fill"
+                        )
                     }
-                    
+
                     Button(action: {
                         isVisible = false
                     }) {
@@ -33,7 +40,7 @@ struct FloatingScriptView: View {
                 }
                 .padding()
                 .background(Color.gray.opacity(0.2))
-                
+
                 ScrollView {
                     Text(script.content ?? "")
                         .font(.system(size: CGFloat(script.fontSize)))
@@ -57,20 +64,22 @@ struct FloatingScriptView: View {
                             }
                         }
                 )
-                
+
                 HStack {
                     Button(action: { resetScroll() }) {
                         Image(systemName: "arrow.counterclockwise")
                     }
-                    
+
                     Button(action: { scrollBackward() }) {
                         Image(systemName: "backward.fill")
                     }
-                    
+
                     Button(action: { togglePlayback() }) {
-                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        Image(
+                            systemName: isPlaying ? "pause.fill" : "play.fill"
+                        )
                     }
-                    
+
                     Button(action: { scrollForward() }) {
                         Image(systemName: "forward.fill")
                     }
@@ -109,27 +118,36 @@ struct FloatingScriptView: View {
                     .onChanged { scale in
                         if !isLocked {
                             size = CGSize(
-                                width: min(max(200, size.width * scale), geometry.size.width - 40),
-                                height: min(max(200, size.height * scale), geometry.size.height - 40)
+                                width: min(
+                                    max(200, size.width * scale),
+                                    geometry.size.width - 40
+                                ),
+                                height: min(
+                                    max(200, size.height * scale),
+                                    geometry.size.height - 40
+                                )
                             )
                         }
                     }
             )
         }
     }
-    
+
     private func resetScroll() {
         withAnimation {
             scrollPosition.scrollTo(edge: .top)
         }
     }
-    
+
     private func scrollBackward() {
         withAnimation {
-            scrollPosition.scrollTo(x: 0, y: max(0, (scrollPosition.point?.y ?? 0) - 50))
+            scrollPosition.scrollTo(
+                x: 0,
+                y: max(0, (scrollPosition.point?.y ?? 0) - 50)
+            )
         }
     }
-    
+
     private func togglePlayback() {
         isPlaying.toggle()
         if isPlaying {
@@ -138,25 +156,32 @@ struct FloatingScriptView: View {
             stopScrolling()
         }
     }
-    
+
     private func startScrolling() {
         let interval = 0.25 / CGFloat(script.scrollSpeed)
-        scrollTimer = Timer
+        scrollTimer =
+            Timer
             .scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
                 withAnimation(.linear(duration: 0.1)) {
-                    scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 1)
+                    scrollPosition.scrollTo(
+                        x: 0,
+                        y: (scrollPosition.point?.y ?? 0) + 1
+                    )
                 }
             }
     }
-    
+
     private func stopScrolling() {
         scrollTimer?.invalidate()
         scrollTimer = nil
     }
-    
+
     private func scrollForward() {
         withAnimation {
-            scrollPosition.scrollTo(x: 0, y: (scrollPosition.point?.y ?? 0) + 50)
+            scrollPosition.scrollTo(
+                x: 0,
+                y: (scrollPosition.point?.y ?? 0) + 50
+            )
         }
     }
 }

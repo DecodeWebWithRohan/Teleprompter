@@ -5,19 +5,17 @@
 //  Created by Rohan Roy - Personal on 05/04/25.
 //
 
+import SwiftData
 import SwiftUI
-import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.modelContext) private var viewContext
     @State private var showingAddScript = false
     @State private var newScriptTitle = ""
     @State private var newScriptContent = ""
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Script.createdAt, ascending: false)],
-        animation: .default)
-    private var scripts: FetchedResults<Script>
+    @Query(sort: \Script.title, animation: .default) private var scripts:
+        [Script]
 
     var body: some View {
         NavigationView {
@@ -72,14 +70,17 @@ struct ContentView: View {
 
     private func addScript() {
         withAnimation {
-            let newScript = Script(context: viewContext)
-            newScript.id = UUID().uuidString
-            newScript.title = newScriptTitle
-            newScript.content = newScriptContent
-            newScript.createdAt = Date()
-            newScript.updatedAt = Date()
-            newScript.fontSize = 30.0
-            newScript.scrollSpeed = 10.0
+            let newScript = Script(
+                id: UUID().uuidString,
+                title: newScriptTitle,
+                content: newScriptContent,
+                createdAt: Date(),
+                updatedAt: Date(),
+                fontSize: 30.0,
+                scrollSpeed: 10.0
+            )
+
+            viewContext.insert(newScript)
 
             do {
                 try viewContext.save()
@@ -107,5 +108,8 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView().environment(
+        \.modelContext,
+        PersistenceController.shared.context
+    )
 }

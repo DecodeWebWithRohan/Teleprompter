@@ -13,8 +13,10 @@ struct TeleprompterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            ContentView().environment(
+                \.modelContext,
+                persistenceController.context
+            )
         }
     }
 }

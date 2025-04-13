@@ -1,19 +1,31 @@
 import Foundation
-import CoreData
+import SwiftData
 
-@objc(IScript)
-public class IScript: NSManagedObject {
-    @NSManaged public var id: UUID
-    @NSManaged public var title: String?
-    @NSManaged public var content: String?
-    @NSManaged public var createdAt: Date
-    @NSManaged public var updatedAt: Date
-    @NSManaged public var fontSize: Double
-    @NSManaged public var scrollSpeed: Double
-}
+@Model
+class Script {
+    var id: String
+    var title: String?
+    var content: String?
+    var createdAt: Date
+    var updatedAt: Date
+    var fontSize: Double
+    var scrollSpeed: Double
 
-extension IScript {
-    static func fetchRequest() -> NSFetchRequest<IScript> {
-        return NSFetchRequest<IScript>(entityName: "Script")
+    init(
+        id: String,
+        title: String?,
+        content: String?,
+        createdAt: Date,
+        updatedAt: Date,
+        fontSize: Double,
+        scrollSpeed: Double
+    ) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.fontSize = fontSize
+        self.scrollSpeed = scrollSpeed
     }
-} 
+}
